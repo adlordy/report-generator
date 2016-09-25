@@ -1,0 +1,23 @@
+<div class="row">
+    <div class="col-xs-4">
+        <customer-list customers="mp.customers" customer="mp.customer"></customer-list>
+    </div>
+    <div class="col-xs-4">
+        <project-list projects="mp.customer.projects" selected-projects="mp.myProjects" />
+    </div>
+    <div class="col-xs-4">
+        <h3>
+            My projects
+            <button type="button" class="btn btn-primary" ng-click="mp.saveMyProjects()" ng-disabled="mp.saving">
+                <i class="glyphicon glyphicon-check"></i>
+                Save
+            </button>
+        </h3>
+        <ul class="list-group">
+            <li href="javascript:;" class="list-group-item" ng-repeat="project in mp.myProjects">
+                <a href="javascript:;" type="button" class="pull-right" ng-click="mp.deselect(project)">&times;</a>
+                {{project.name}} ({{project.customer.shortName}})
+            </li>
+        </ul>
+    </div>
+</div>

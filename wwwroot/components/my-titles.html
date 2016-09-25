@@ -1,0 +1,59 @@
+<div class="row">
+    <div class="col-xs-4">
+        <div class="col-xs-12">
+            <div class="form-horizontal">
+                <div class="col-xs-12">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input type="search" class="form-control" ng-model="mt.search" />
+                            <label class="input-group-addon">
+                            <a href="javascript:;" class="btn-link" ng-click="mt.search = ''">
+                                <i class="glyphicon glyphicon-remove"></i>
+                            </a>
+                        </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12">
+            <div class="overflow">
+                <div class="list-group">
+                    <a href="javascript:;" class="list-group-item" ng-class="{active:mt.isSelected(title)}" ng-repeat="title in mt.getUnassigned() | filter: mt.search"
+                        ng-click="mt.select(title)">
+                    {{title.name}}
+                </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xs-4">
+        <div class="overflow">
+            <div class="list-group">
+                <a href="javascript:;" class="list-group-item" ng-repeat="project in mt.myProjects" ng-click="mt.assign(project)" ng-class="{active:project==mt.project}">
+                    {{project.name}} ({{project.customer.shortName}})
+                    <span class="badge pull-right">{{(mt.myTitles | filter:{projectId:project.id}).length}}</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-xs-4">
+        <h3>
+            My titles
+            <button type="button" class="btn btn-primary" ng-click="mt.saveMyTitles()" ng-disabled="mt.saving">
+                <i class="glyphicon glyphicon-check"></i>
+                Save
+            </button>
+        </h3>
+
+        <div class="overflow">
+            <ul class="list-group">
+                <li class="list-group-item" 
+                    ng-repeat="title in mt.myTitles | filter:{projectId:mt.project.id}">
+                    <a href="javascript:;" type="button" class="pull-right" ng-click="mt.unassign(title)">&times;</a>
+                    {{title.name}}
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

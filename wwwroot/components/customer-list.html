@@ -1,0 +1,22 @@
+<div class="form-horizontal">
+    <div class="col-sm-12">
+        <div class="form-group">
+            <div class="col-sm-12">
+                <div class="input-group">
+                    <input type="search" class="form-control" ng-model="cl.search" />
+                    <label class="input-group-addon">
+                        <a href="javascript:;" class="btn-link" ng-click="cl.search=''"><i class="glyphicon glyphicon-remove"></i></a>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-12">
+        <div class="list-group overflow">
+            <a href="javascript:;" ng-repeat="customer in cl.customers | filter:{shortName:cl.search}" class="list-group-item" ng-click="cl.select(customer)"
+                ng-class="{active:customer==cl.customer}">
+            {{customer.shortName}}
+        </a>
+        </div>
+    </div>
+</div>
