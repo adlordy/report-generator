@@ -1,0 +1,16 @@
+<div class="row">
+    <div class="col-xs-2">
+        <button type="submit" class="btn btn-primary" ng-click="sync.sync()" ng-disabled="sync.loading">
+            <i class="glyphicon glyphicon-refresh"></i>
+            Sync
+        </button>
+    </div>
+    <div class="col-xs-2">
+        <div class="alert alert-danger" ng-if="sync.error">
+            Error occured
+        </div>
+        <div class="alert alert-success" ng-if="sync.success">
+            Completed successfully
+        </div>
+    </div>
+</div>

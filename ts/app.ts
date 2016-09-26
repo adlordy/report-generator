@@ -3,6 +3,7 @@
 /// <reference path="components/my-titles.ts"  />
 /// <reference path="components/my-projects.ts"  />
 /// <reference path="components/my-reports.ts"  />
+/// <reference path="components/sync.ts"  />
 /// <reference path="services/data.ts"  />
 
 angular.module("app",["ngRoute"])
@@ -12,6 +13,7 @@ angular.module("app",["ngRoute"])
     .component("myProjects",MyProjects.definition)
     .component("myTitles",MyTitles.definition)
     .component("myReports",MyReports.definition)
+    .component("sync",Sync.definition)
     .config(($locationProvider:ng.ILocationProvider,$routeProvider:ng.route.IRouteProvider)=>{
         $locationProvider.html5Mode(true);
 
@@ -42,7 +44,11 @@ angular.module("app",["ngRoute"])
                     return dataService.getReports();
                 }
             }
-        }).otherwise({
+        })
+        .when("/app/sync",{
+            template: "<sync />",
+        })
+        .otherwise({
             redirectTo:"/app/my-projects"
         });
     });

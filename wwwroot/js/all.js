@@ -34,6 +34,9 @@ var DataService = (function () {
     DataService.prototype.getReport = function (file) {
         return this.$http.get("api/data/report/" + file).then(function (r) { return r.data; });
     };
+    DataService.prototype.sync = function () {
+        return this.$http.post("api/data/sync", {}).then(function (r) { return r.data; });
+    };
     DataService.prototype.getData = function () {
         return this.$q.all([this.getProjects(), this.getCustomers(), this.getMyProjects()])
             .then(function (data) {
@@ -213,11 +216,33 @@ var MyReports = (function () {
     };
     return MyReports;
 }());
+var Sync = (function () {
+    function Sync(dataService) {
+        this.dataService = dataService;
+    }
+    Sync.prototype.sync = function () {
+        var _this = this;
+        this.loading = true;
+        this.success = false;
+        this.error = false;
+        this.dataService.sync()
+            .then(function () { return _this.success = true; })
+            .catch(function () { return _this.error = true; })
+            .finally(function () { return _this.loading = false; });
+    };
+    Sync.definition = {
+        templateUrl: "components/sync.html",
+        controller: Sync,
+        controllerAs: "sync"
+    };
+    return Sync;
+}());
 /// <reference path="components/customer-list.ts"  />
 /// <reference path="components/project-list.ts"  />
 /// <reference path="components/my-titles.ts"  />
 /// <reference path="components/my-projects.ts"  />
 /// <reference path="components/my-reports.ts"  />
+/// <reference path="components/sync.ts"  />
 /// <reference path="services/data.ts"  />
 angular.module("app", ["ngRoute"])
     .service("dataService", DataService)
@@ -226,6 +251,7 @@ angular.module("app", ["ngRoute"])
     .component("myProjects", MyProjects.definition)
     .component("myTitles", MyTitles.definition)
     .component("myReports", MyReports.definition)
+    .component("sync", Sync.definition)
     .config(function ($locationProvider, $routeProvider) {
     $locationProvider.html5Mode(true);
     $routeProvider.when("/app/my-projects", {
@@ -255,7 +281,11 @@ angular.module("app", ["ngRoute"])
                 return dataService.getReports();
             }
         }
-    }).otherwise({
+    })
+        .when("/app/sync", {
+        template: "<sync />"
+    })
+        .otherwise({
         redirectTo: "/app/my-projects"
     });
 });

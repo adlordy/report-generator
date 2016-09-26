@@ -45,6 +45,10 @@ class DataService {
         return this.$http.get<ReportItem[]>("api/data/report/"+file).then(r=>r.data);
     }
 
+    sync(){
+        return this.$http.post("api/data/sync",{}).then(r=>r.data);
+    }
+
     getData() {
         return this.$q.all([this.getProjects(), this.getCustomers(),this.getMyProjects()])
             .then(data => {

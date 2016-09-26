@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace ReportGenerator.Controllers
 {
@@ -25,9 +27,7 @@ namespace ReportGenerator.Controllers
         [HttpGet("customers")]
         public IEnumerable<Customer> GetCustomers()
         {
-            var path = Path.Combine(this._hostingEnvironment.ContentRootPath, "data", "customers.xml");
-            XDocument doc = XDocument.Load(path);
-            return GetProperties(doc).Select(properties => new Customer
+            return GetFromFiles("customers", properties => new Customer
             {
                 Id = (int)properties.Element(d + "Идентификатор"),
                 ShortName = properties.Element(d + "КраткоеНаименованиеЗаказчика").Value,
@@ -38,14 +38,21 @@ namespace ReportGenerator.Controllers
         [HttpGet("projects")]
         public IEnumerable<Project> GetProjects()
         {
-            var path = Path.Combine(this._hostingEnvironment.ContentRootPath, "data", "projects.xml");
-            XDocument doc = XDocument.Load(path);
-            return GetProperties(doc).Select(properties => new Project
+            return GetFromFiles("projects", properties => new Project
             {
                 Id = (int)properties.Element(d + "Идентификатор"),
                 Name = properties.Element(d + "НаименованиеПроекта").Value,
                 CustomerId = (int)properties.Element(d + "КраткоеНаименованиеЗаказчикаId")
             });
+        }
+
+        private IEnumerable<T> GetFromFiles<T>(string file, Func<XElement, T> mapper)
+        {
+            var path = Path.Combine(this._hostingEnvironment.ContentRootPath, "data");
+            return Directory.GetFiles(path, file + "-?.xml").SelectMany(
+                filePath =>
+                    GetProperties(XDocument.Load(filePath)).Select(mapper)
+                );
         }
 
         [HttpGet("my-projects")]
@@ -132,32 +139,67 @@ namespace ReportGenerator.Controllers
                 var items = System.IO.File.ReadAllLines(path).Select(line =>
                 {
                     return line.Split('\t');
-                }).Skip(1).Where(parts=>parts.Length==2).Select(parts => {
+                }).Skip(1).Where(parts => parts.Length == 2).Select(parts =>
+                {
                     return new { Name = parts[0], Count = Int32.Parse(parts[1]) };
                 });
                 var customers = GetCustomers();
                 var projects = GetProjects();
                 var myTitles = GetMyTitles();
                 var titles = from i in items
-                              join t in myTitles on i.Name equals t.Name
-                              group i.Count by t.ProjectId into g 
-                              select new {
-                                  ProjectId = g.Key,
-                                  Count = g.Sum()
-                              };
+                             join t in myTitles on i.Name equals t.Name
+                             group i.Count by t.ProjectId into g
+                             select new
+                             {
+                                 ProjectId = g.Key,
+                                 Count = g.Sum()
+                             };
                 return from t in titles
                        join p in projects on t.ProjectId equals p.Id
                        join c in customers on p.CustomerId equals c.Id
-                       select new ReportItem{
+                       select new ReportItem
+                       {
                            Date = date,
                            Customer = c,
                            Project = p,
                            Title = "",
                            Type = "",
-                           Hours = Math.Round(t.Count / (double) 3600, 3)
+                           Hours = Math.Round(t.Count / (double)3600, 3)
                        };
             }
             return Enumerable.Empty<ReportItem>();
+        }
+
+        [HttpPost("sync")]
+        public async Task<IActionResult> Sync()
+        {
+            var baseUrl = "http://ntc-st/ASURV/_vti_bin/listdata.svc/";
+            await LoadFromServer(baseUrl + "Заказчики", "customers", 0);
+            await LoadFromServer(baseUrl + "ЗаказчикиПроекты", "projects", 0);
+            await LoadFromServer(baseUrl + "ВидыРабот", "types", 0);
+            return Ok();
+        }
+
+        private async Task LoadFromServer(string url, string file, int index)
+        {
+            var path = Path.Combine(this._hostingEnvironment.ContentRootPath, "data", file + "-" + index.ToString() + ".xml");
+            var request = WebRequest.Create(url);
+            request.Credentials = CredentialCache.DefaultNetworkCredentials;
+            var response = await request.GetResponseAsync();
+            using (var input = response.GetResponseStream())
+            {
+                using (var output = System.IO.File.OpenWrite(path))
+                {
+                    input.CopyTo(output);
+                }
+                input.Seek(0, SeekOrigin.Begin);
+                var doc = XDocument.Load(input);
+                var next = doc.Root.Elements(a + "link").FirstOrDefault(link => link.Attribute("rel").Value == "next");
+                if (next != null)
+                {
+                    await LoadFromServer(next.Attribute("href").Value, file, index + 1);
+                }
+            }
         }
 
         private IEnumerable<XElement> GetProperties(XDocument doc)
