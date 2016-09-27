@@ -192,6 +192,13 @@ namespace ReportGenerator.Controllers
                 {
                     input.CopyTo(output);
                 }
+
+                var doc = XDocument.Load(path);
+                var next = doc.Root.Elements(a + "link").FirstOrDefault(link => link.Attribute("rel").Value == "next");
+                if (next != null)
+                {
+                    await LoadFromServer(next.Attribute("href").Value, file, index + 1);
+                }
             }
         }
 
