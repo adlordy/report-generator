@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-xs-4">
+    <div class="col-xs-2">
         <div class="overflow">
             <div class="list-group">
                 <a href="javascript:;" ng-repeat="report in mr.reports" 
@@ -7,7 +7,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xs-8">
+    <div class="col-xs-10">
         <table class="table table-condensed table-striped" ng-if="mr.reportItems.length>0">
             <thead>
                 <tr>
@@ -26,7 +26,7 @@
                     <td>{{item.project.name}}</td>
                     <td></td>
                     <td>{{item.hours}}</td>
-                    <td></td>
+                    <td>{{item.type}}</td>
                 </tr>
             </tbody>
         </table>

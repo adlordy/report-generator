@@ -46,6 +46,17 @@ namespace ReportGenerator.Controllers
             });
         }
 
+        [HttpGet("types")]
+        public IEnumerable<WorkType> GetTypes()
+        {
+            return GetFromFiles("types", properties => new WorkType
+            {
+                Id = (int)properties.Element(d + "Идентификатор"),
+                Name = properties.Element(d + "Название").Value,
+                Description = properties.Element(d + "Расшифровка").Value
+            });
+        }
+
         private IEnumerable<T> GetFromFiles<T>(string file, Func<XElement, T> mapper)
         {
             var path = Path.Combine(this._hostingEnvironment.ContentRootPath, "data");
@@ -102,7 +113,8 @@ namespace ReportGenerator.Controllers
                     return new Title
                     {
                         Name = parts[0],
-                        ProjectId = Int32.Parse(parts[1])
+                        ProjectId = Int32.Parse(parts[1]),
+                        TypeId = Int32.Parse(parts[2])
                     };
                 });
             }
@@ -116,7 +128,7 @@ namespace ReportGenerator.Controllers
         public void SetMyTitles([FromBody] Title[] titles)
         {
             var path = Path.Combine(this._hostingEnvironment.ContentRootPath, "data", "my-titles.txt");
-            System.IO.File.WriteAllLines(path, titles.Select(title => $"{title.Name}\t{title.ProjectId}"));
+            System.IO.File.WriteAllLines(path, titles.Select(title => $"{title.Name}\t{title.ProjectId}\t{title.TypeId}"));
         }
 
         [HttpGet("reports")]
@@ -146,24 +158,26 @@ namespace ReportGenerator.Controllers
                 var customers = GetCustomers();
                 var projects = GetProjects();
                 var myTitles = GetMyTitles();
+                var types = GetTypes();
                 var titles = from i in items
                              join t in myTitles on i.Name equals t.Name
-                             group i.Count by t.ProjectId into g
+                             group i.Count by new {t.ProjectId,t.TypeId} into g
                              select new
                              {
-                                 ProjectId = g.Key,
+                                 Key = g.Key,
                                  Count = g.Sum()
                              };
                 return from t in titles
-                       join p in projects on t.ProjectId equals p.Id
+                       join p in projects on t.Key.ProjectId equals p.Id
                        join c in customers on p.CustomerId equals c.Id
+                       join w in types on t.Key.TypeId equals w.Id
                        select new ReportItem
                        {
                            Date = date,
                            Customer = c,
                            Project = p,
                            Title = "",
-                           Type = "",
+                           Type = w.Name,
                            Hours = Math.Round(t.Count / (double)3600, 3)
                        };
             }

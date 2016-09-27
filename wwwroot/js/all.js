@@ -12,6 +12,9 @@ var DataService = (function () {
     DataService.prototype.getCustomers = function () {
         return this.$http.get("api/data/customers").then(function (r) { return r.data; });
     };
+    DataService.prototype.getTypes = function () {
+        return this.$http.get("api/data/types").then(function (r) { return r.data; });
+    };
     DataService.prototype.getMyProjects = function () {
         return this.$http.get("api/data/my-projects").then(function (r) { return r.data; });
     };
@@ -134,6 +137,9 @@ var MyTitles = (function () {
             this.selectedTitles.push(title);
         }
     };
+    MyTitles.prototype.selectType = function (type) {
+        this.type = type;
+    };
     MyTitles.prototype.isSelected = function (title) {
         return this.selectedTitles.indexOf(title) > -1;
     };
@@ -141,10 +147,16 @@ var MyTitles = (function () {
         return this.titles.filter(function (r) { return angular.isUndefined(r.projectId); });
     };
     MyTitles.prototype.assign = function (project) {
-        this.selectedTitles.forEach(function (t) { return t.projectId = project.id; });
-        this.myTitles = this.myTitles.concat(this.selectedTitles);
-        this.selectedTitles = [];
+        var _this = this;
         this.project = project;
+        if (this.type && this.project) {
+            this.selectedTitles.forEach(function (t) {
+                t.projectId = project.id;
+                t.typeId = _this.type.id;
+            });
+            this.myTitles = this.myTitles.concat(this.selectedTitles);
+            this.selectedTitles = [];
+        }
     };
     MyTitles.prototype.unassign = function (title) {
         var index = this.myTitles.indexOf(title);
@@ -166,7 +178,8 @@ var MyTitles = (function () {
         bindings: {
             titles: "=",
             myTitles: "=",
-            myProjects: "="
+            myProjects: "=",
+            types: "="
         }
     };
     return MyTitles;
@@ -262,7 +275,7 @@ angular.module("app", ["ngRoute"])
             }
         }
     }).when("/app/my-titles", {
-        template: "<my-titles titles='$resolve.titles' my-titles='$resolve.myTitles' my-projects='$resolve.data.myProjects' />",
+        template: "<my-titles titles='$resolve.titles' my-titles='$resolve.myTitles' my-projects='$resolve.data.myProjects' types='$resolve.types' />",
         resolve: {
             titles: function (dataService) {
                 return dataService.getTitles().then(function (titles) { return titles.map(function (t) { return { name: t }; }); });
@@ -272,6 +285,9 @@ angular.module("app", ["ngRoute"])
             },
             data: function (dataService) {
                 return dataService.getData();
+            },
+            types: function (dataService) {
+                return dataService.getTypes();
             }
         }
     }).when("/app/my-reports", {

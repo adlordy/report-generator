@@ -25,7 +25,7 @@ angular.module("app",["ngRoute"])
                 }
             }
         }).when("/app/my-titles",{
-            template: "<my-titles titles='$resolve.titles' my-titles='$resolve.myTitles' my-projects='$resolve.data.myProjects' />",
+            template: "<my-titles titles='$resolve.titles' my-titles='$resolve.myTitles' my-projects='$resolve.data.myProjects' types='$resolve.types' />",
             resolve:{
                 titles : (dataService:DataService)=>{
                     return dataService.getTitles().then(titles=>titles.map(t=>{return {name:t}}));
@@ -35,6 +35,9 @@ angular.module("app",["ngRoute"])
                 },
                 data : (dataService:DataService)=>{
                     return dataService.getData();
+                },
+                types:(dataService:DataService)=>{
+                    return dataService.getTypes();
                 }
             }
         }).when("/app/my-reports",{

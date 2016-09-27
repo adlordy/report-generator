@@ -6,7 +6,8 @@ class MyTitles {
         bindings: {
             titles: "=",
             myTitles: "=",
-            myProjects: "="
+            myProjects: "=",
+            types: "="
         }
     };
 
@@ -14,10 +15,12 @@ class MyTitles {
     selectedTitles: Title[] = [];
     myTitles: Title[];
     myProjects: Project[];
-    project:Project;
-    saving:boolean;
+    types: WorkType[];
+    type: WorkType;
+    project: Project;
+    saving: boolean;
 
-    constructor(private dataService:DataService){
+    constructor(private dataService: DataService) {
     }
 
     $onInit() {
@@ -40,6 +43,10 @@ class MyTitles {
         }
     }
 
+    selectType(type: WorkType) {
+        this.type = type;
+    }
+
     isSelected(title: Title) {
         return this.selectedTitles.indexOf(title) > -1;
     }
@@ -49,23 +56,28 @@ class MyTitles {
     }
 
     assign(project: Project) {
-        this.selectedTitles.forEach(t => t.projectId = project.id);
-        this.myTitles = this.myTitles.concat(this.selectedTitles);
-        this.selectedTitles = [];
         this.project = project;
+        if (this.type && this.project) {
+            this.selectedTitles.forEach(t => {
+                t.projectId = project.id;
+                t.typeId = this.type.id;
+            });
+            this.myTitles = this.myTitles.concat(this.selectedTitles);
+            this.selectedTitles = [];
+        }
     }
 
-    unassign(title:Title){
+    unassign(title: Title) {
         var index = this.myTitles.indexOf(title);
-        if (index>-1){
-            this.myTitles.splice(index,1);
+        if (index > -1) {
+            this.myTitles.splice(index, 1);
         }
         title.projectId = undefined;
     }
 
-    saveMyTitles(){
+    saveMyTitles() {
         this.saving = true;
         this.dataService.setMyTitles(this.myTitles)
-            .finally(()=>this.saving=false);
+            .finally(() => this.saving = false);
     }
 }
