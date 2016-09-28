@@ -57,10 +57,10 @@ class MyTitles {
 
     assign(project: Project) {
         this.project = project;
-        if (this.type && this.project) {
+        if (this.project && (this.type || this.isPersonal(this.project))) {
             this.selectedTitles.forEach(t => {
                 t.projectId = project.id;
-                t.typeId = this.type.id;
+                t.typeId = this.isPersonal(project)?-1:this.type.id;
             });
             this.myTitles = this.myTitles.concat(this.selectedTitles);
             this.selectedTitles = [];
@@ -79,5 +79,13 @@ class MyTitles {
         this.saving = true;
         this.dataService.setMyTitles(this.myTitles)
             .finally(() => this.saving = false);
+    }
+
+    isPersonal(project:Project){
+        return project.id === -1;
+    }
+
+    hasItems(type:WorkType){
+        return this.myTitles.some(t=>this.project && t.projectId===this.project.id && t.typeId == type.id);
     }
 }

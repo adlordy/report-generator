@@ -149,10 +149,10 @@ var MyTitles = (function () {
     MyTitles.prototype.assign = function (project) {
         var _this = this;
         this.project = project;
-        if (this.type && this.project) {
+        if (this.project && (this.type || this.isPersonal(this.project))) {
             this.selectedTitles.forEach(function (t) {
                 t.projectId = project.id;
-                t.typeId = _this.type.id;
+                t.typeId = _this.isPersonal(project) ? -1 : _this.type.id;
             });
             this.myTitles = this.myTitles.concat(this.selectedTitles);
             this.selectedTitles = [];
@@ -170,6 +170,13 @@ var MyTitles = (function () {
         this.saving = true;
         this.dataService.setMyTitles(this.myTitles)
             .finally(function () { return _this.saving = false; });
+    };
+    MyTitles.prototype.isPersonal = function (project) {
+        return project.id === -1;
+    };
+    MyTitles.prototype.hasItems = function (type) {
+        var _this = this;
+        return this.myTitles.some(function (t) { return _this.project && t.projectId === _this.project.id && t.typeId == type.id; });
     };
     MyTitles.definition = {
         templateUrl: "components/my-titles.html",
@@ -217,7 +224,10 @@ var MyReports = (function () {
     MyReports.prototype.select = function (report) {
         var _this = this;
         this.report = report;
-        this.dataService.getReport(this.report.name).then(function (items) { return _this.reportItems = items; });
+        this.dataService.getReport(this.report.name).then(function (items) {
+            _this.reportItems = items.filter(function (r) { return r.project.id !== -1; });
+            _this.personal = items.filter(function (r) { return r.project.id === -1; })[0];
+        });
     };
     MyReports.definition = {
         templateUrl: "components/my-reports.html",

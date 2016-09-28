@@ -6,7 +6,7 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
+using ReportGenerator.Services;
 
 namespace ReportGenerator
 {
@@ -29,6 +29,7 @@ namespace ReportGenerator
         {
             // Add framework services.
             services.AddMvc();
+            services.AddSingleton(new ReportService());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using ReportGenerator.Services;
 
 namespace ReportGenerator.Controllers
 {
@@ -18,10 +19,12 @@ namespace ReportGenerator.Controllers
         private static readonly XNamespace d = "http://schemas.microsoft.com/ado/2007/08/dataservices";
         private static readonly XNamespace m = "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata";
         private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly ReportService _service;
 
-        public DataController(IHostingEnvironment hostingEnvironment)
+        public DataController(IHostingEnvironment hostingEnvironment, ReportService service)
         {
             this._hostingEnvironment = hostingEnvironment;
+            this._service = service;
         }
 
         [HttpGet("customers")]
@@ -32,7 +35,7 @@ namespace ReportGenerator.Controllers
                 Id = (int)properties.Element(d + "Идентификатор"),
                 ShortName = properties.Element(d + "КраткоеНаименованиеЗаказчика").Value,
                 Name = properties.Element(d + "ПолноеНаименованиеЗаказчика").Value
-            });
+            }).Concat(new []{_service.Self});
         }
 
         [HttpGet("projects")]
@@ -43,7 +46,7 @@ namespace ReportGenerator.Controllers
                 Id = (int)properties.Element(d + "Идентификатор"),
                 Name = properties.Element(d + "НаименованиеПроекта").Value,
                 CustomerId = (int)properties.Element(d + "КраткоеНаименованиеЗаказчикаId")
-            });
+            }).Concat(new []{_service.Personal});
         }
 
         [HttpGet("types")]
@@ -158,7 +161,7 @@ namespace ReportGenerator.Controllers
                 var customers = GetCustomers();
                 var projects = GetProjects();
                 var myTitles = GetMyTitles();
-                var types = GetTypes();
+                var types = GetTypes().Concat(new []{_service.NoWorkType});
                 var titles = from i in items
                              join t in myTitles on i.Name equals t.Name
                              group i.Count by new {t.ProjectId,t.TypeId} into g
@@ -167,7 +170,7 @@ namespace ReportGenerator.Controllers
                                  Key = g.Key,
                                  Count = g.Sum()
                              };
-                return from t in titles
+                var results = from t in titles
                        join p in projects on t.Key.ProjectId equals p.Id
                        join c in customers on p.CustomerId equals c.Id
                        join w in types on t.Key.TypeId equals w.Id
@@ -178,8 +181,9 @@ namespace ReportGenerator.Controllers
                            Project = p,
                            Title = "",
                            Type = w.Name,
-                           Hours = Math.Round(t.Count / (double)3600, 3)
+                           Seconds = t.Count
                        };
+                return _service.Process(results);
             }
             return Enumerable.Empty<ReportItem>();
         }
