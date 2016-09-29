@@ -14,7 +14,6 @@
                     <th>Date</th>
                     <th>Customer</th>
                     <th>Project</th>
-                    <th>Title</th>
                     <th>Time</th>
                     <th>Work Type</th>
                 </tr>
@@ -24,8 +23,7 @@
                     <td>{{item.date | date}}</td>
                     <td>{{item.customer.shortName}}</td>
                     <td>{{item.project.name}}</td>
-                    <td></td>
-                    <td>{{item.seconds}} ({{item.adjustedSeconds}})</td>
+                    <td>{{item.adjustedSeconds/3600 | number:2 }} ({{item.seconds/3600 | number:2}})</td>
                     <td>{{item.type}}</td>
                 </tr>
             </tbody>
@@ -34,8 +32,7 @@
                     <td>{{mr.personal.date | date}}</td>
                     <td>{{mr.personal.customer.shortName}}</td>
                     <td>{{mr.personal.project.name}}</td>
-                    <td></td>
-                    <td>{{mr.personal.seconds}}</td>
+                    <td>{{mr.personal.seconds/3600 | number:2}}</td>
                     <td>{{mr.personal.type}}</td>
                 </tr>
             </tfoot>
