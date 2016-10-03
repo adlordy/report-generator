@@ -333,7 +333,6 @@ function datePickerDirective() {
         restrict: "C",
         require: "ngModel",
         link: function ($scope, $element, attrs, model) {
-            $element.datepicker({ autoclose: true });
             model.$formatters.push(function (value) {
                 if (angular.isUndefined(value))
                     return value;
@@ -342,8 +341,14 @@ function datePickerDirective() {
             model.$parsers.unshift(function (value) {
                 if (model.$isEmpty(value))
                     return value;
-                return new Date(value).toISOString().substring(0, 10);
+                var date = new Date(value);
+                return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())).toISOString().substring(0, 10);
             });
+            var render = model.$render;
+            model.$render = function () {
+                $(".datepicker.datepicker-dropdown", document.body).hide();
+                render();
+            };
         }
     };
 }
