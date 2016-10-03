@@ -11,6 +11,7 @@ class MyTitles {
         }
     };
 
+    date:string;
     titles: Title[];
     selectedTitles: Title[] = [];
     myTitles: Title[];
@@ -20,7 +21,10 @@ class MyTitles {
     project: Project;
     saving: boolean;
 
-    constructor(private dataService: DataService) {
+    constructor(private dataService: DataService, 
+        private $routeParams:ng.route.IRouteParamsService,
+        private $location:ng.ILocationService) {
+        this.date = this.$routeParams["date"];
     }
 
     $onInit() {
@@ -87,5 +91,10 @@ class MyTitles {
 
     hasItems(type:WorkType){
         return this.myTitles.some(t=>this.project && t.projectId===this.project.id && t.typeId == type.id);
+    }
+
+    dateChange(){
+        if (this.date!="" && this.date != this.$routeParams["date"])
+            this.$location.path("/app/my-titles/"+this.date);
     }
 }

@@ -14,6 +14,7 @@ angular.module("app",["ngRoute"])
     .component("myTitles",MyTitles.definition)
     .component("myReports",MyReports.definition)
     .component("sync",Sync.definition)
+    .directive("datePicker",datePickerDirective)
     .config(($locationProvider:ng.ILocationProvider,$routeProvider:ng.route.IRouteProvider)=>{
         $locationProvider.html5Mode(true);
 
@@ -24,11 +25,16 @@ angular.module("app",["ngRoute"])
                     return dataService.getData();
                 }
             }
-        }).when("/app/my-titles",{
+        }).when("/app/my-titles/",{
+            redirectTo: ()=>{
+                let date = new Date(Date.now() - 24*3600*1000);
+                return "/app/my-titles/" + date.toISOString().substring(0,10);
+            }
+        }).when("/app/my-titles/:date",{
             template: "<my-titles titles='$resolve.titles' my-titles='$resolve.myTitles' my-projects='$resolve.data.myProjects' types='$resolve.types' />",
             resolve:{
-                titles : (dataService:DataService)=>{
-                    return dataService.getTitles().then(titles=>titles.map(t=>{return {name:t}}));
+                titles : (dataService:DataService,$route:ng.route.IRouteService)=>{
+                    return dataService.getTitles($route.current.params["date"]).then(titles=>titles.map(t=>{return {name:t}}));
                 },
                 myTitles : (dataService:DataService)=>{
                     return dataService.getMyTitles();

@@ -5,6 +5,15 @@
                 <div class="col-xs-12">
                     <div class="form-group">
                         <div class="input-group">
+                            <input type="text" name="date" id="date" class="form-control date-picker" ng-model="mt.date" 
+                            ng-change="mt.dateChange()" />
+                            <label class="input-group-addon" for="date">
+                                <i class="glyphicon glyphicon glyphicon-calendar"></i>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
                             <input type="search" class="form-control" ng-model="mt.search" />
                             <label class="input-group-addon">
                             <a href="javascript:;" class="btn-link" ng-click="mt.search = ''">
@@ -30,8 +39,8 @@
     <div class="col-xs-3">
         <div class="overflow">
             <div class="list-group">
-                <a href="javascript:;" class="list-group-item" ng-repeat="type in mt.types" ng-click="mt.selectType(type)" 
-                    ng-class="{active:type==mt.type}" title="{{type.description}}">
+                <a href="javascript:;" class="list-group-item" ng-repeat="type in mt.types" ng-click="mt.selectType(type)" ng-class="{active:type==mt.type}"
+                    title="{{type.description}}">
                     {{type.name}}
                 </a>
             </div>
@@ -61,11 +70,9 @@
                 <li class="list-group-item list-group-item-info" ng-if="mt.hasItems(type)">
                     {{type.name}}
                 </li>
-                <li class="list-group-item" 
-                    ng-repeat="title in mt.myTitles | filter:{projectId:mt.project.id, typeId: type.id}">
-                    
-                    <a href="javascript:;" type="button" class="pull-right" ng-click="mt.unassign(title)">&times;</a>
-                    {{title.name}}
+                <li class="list-group-item" ng-repeat="title in mt.myTitles | filter:{projectId:mt.project.id, typeId: type.id}">
+
+                    <a href="javascript:;" type="button" class="pull-right" ng-click="mt.unassign(title)">&times;</a> {{title.name}}
                 </li>
             </ul>
         </div>

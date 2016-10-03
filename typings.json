@@ -4,6 +4,7 @@
   "globalDependencies": {
     "angular": "registry:dt/angular#1.5.0+20160922195358",
     "angular-route": "registry:dt/angular-route#1.3.0+20160317120654",
+    "bootstrap-datepicker": "registry:dt/bootstrap-datepicker#0.0.0+20160812112642",
     "jquery": "registry:dt/jquery#1.10.0+20160908203239"
   }
 }

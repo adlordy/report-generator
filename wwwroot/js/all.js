@@ -22,8 +22,8 @@ var DataService = (function () {
         return this.$http.put("api/data/my-projects", projects.map(function (p) { return p.id; }))
             .then(function (r) { return r.data; });
     };
-    DataService.prototype.getTitles = function () {
-        return this.$http.get("api/data/titles").then(function (r) { return r.data; });
+    DataService.prototype.getTitles = function (date) {
+        return this.$http.get("api/data/titles/" + date).then(function (r) { return r.data; });
     };
     DataService.prototype.getMyTitles = function () {
         return this.$http.get("api/data/my-titles").then(function (r) { return r.data; });
@@ -113,9 +113,12 @@ var ProjectList = (function () {
     return ProjectList;
 }());
 var MyTitles = (function () {
-    function MyTitles(dataService) {
+    function MyTitles(dataService, $routeParams, $location) {
         this.dataService = dataService;
+        this.$routeParams = $routeParams;
+        this.$location = $location;
         this.selectedTitles = [];
+        this.date = this.$routeParams["date"];
     }
     MyTitles.prototype.$onInit = function () {
         var _this = this;
@@ -177,6 +180,10 @@ var MyTitles = (function () {
     MyTitles.prototype.hasItems = function (type) {
         var _this = this;
         return this.myTitles.some(function (t) { return _this.project && t.projectId === _this.project.id && t.typeId == type.id; });
+    };
+    MyTitles.prototype.dateChange = function () {
+        if (this.date != "" && this.date != this.$routeParams["date"])
+            this.$location.path("/app/my-titles/" + this.date);
     };
     MyTitles.definition = {
         templateUrl: "components/my-titles.html",
@@ -275,6 +282,7 @@ angular.module("app", ["ngRoute"])
     .component("myTitles", MyTitles.definition)
     .component("myReports", MyReports.definition)
     .component("sync", Sync.definition)
+    .directive("datePicker", datePickerDirective)
     .config(function ($locationProvider, $routeProvider) {
     $locationProvider.html5Mode(true);
     $routeProvider.when("/app/my-projects", {
@@ -284,11 +292,16 @@ angular.module("app", ["ngRoute"])
                 return dataService.getData();
             }
         }
-    }).when("/app/my-titles", {
+    }).when("/app/my-titles/", {
+        redirectTo: function () {
+            var date = new Date(Date.now() - 24 * 3600 * 1000);
+            return "/app/my-titles/" + date.toISOString().substring(0, 10);
+        }
+    }).when("/app/my-titles/:date", {
         template: "<my-titles titles='$resolve.titles' my-titles='$resolve.myTitles' my-projects='$resolve.data.myProjects' types='$resolve.types' />",
         resolve: {
-            titles: function (dataService) {
-                return dataService.getTitles().then(function (titles) { return titles.map(function (t) { return { name: t }; }); });
+            titles: function (dataService, $route) {
+                return dataService.getTitles($route.current.params["date"]).then(function (titles) { return titles.map(function (t) { return { name: t }; }); });
             },
             myTitles: function (dataService) {
                 return dataService.getMyTitles();
@@ -315,3 +328,22 @@ angular.module("app", ["ngRoute"])
         redirectTo: "/app/my-projects"
     });
 });
+function datePickerDirective() {
+    return {
+        restrict: "C",
+        require: "ngModel",
+        link: function ($scope, $element, attrs, model) {
+            $element.datepicker({ autoclose: true });
+            model.$formatters.push(function (value) {
+                if (angular.isUndefined(value))
+                    return value;
+                return new Date(value).toLocaleDateString();
+            });
+            model.$parsers.unshift(function (value) {
+                if (model.$isEmpty(value))
+                    return value;
+                return new Date(value).toISOString().substring(0, 10);
+            });
+        }
+    };
+}

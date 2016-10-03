@@ -29,8 +29,8 @@ class DataService {
             .then(r => r.data);
     }
 
-    getTitles() {
-        return this.$http.get<string[]>("api/data/titles").then(r => r.data);
+    getTitles(date:string) {
+        return this.$http.get<string[]>("api/data/titles/"+date).then(r => r.data);
     }
 
     getMyTitles() {

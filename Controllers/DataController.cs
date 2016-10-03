@@ -87,16 +87,16 @@ namespace ReportGenerator.Controllers
             System.IO.File.WriteAllLines(path, projectIds.Select(id => id.ToString()));
         }
 
-        [HttpGet("titles")]
-        public IEnumerable<string> GetTitles()
+        [HttpGet("titles/{date:DateTime}")]
+        public IEnumerable<string> GetTitles([FromRoute] DateTime date)
         {
-            return GetFiles().SelectMany(file => System.IO.File.ReadAllLines(file).Skip(1))
+            return GetFiles(date).SelectMany(file => System.IO.File.ReadAllLines(file).Skip(1))
                 .Select(line => line.Split('\t')[0]).Distinct().OrderBy(t => t);
         }
 
-        private string[] GetFiles()
+        private string[] GetFiles(DateTime? date = null)
         {
-            return Directory.GetFiles(GetMonitorPath(), "*.csv");
+            return Directory.GetFiles(GetMonitorPath(), (date!=null?date.Value.ToString("yyyy-MM-dd"):"") + "*.csv");
         }
 
         private static string GetMonitorPath()
