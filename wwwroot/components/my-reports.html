@@ -1,9 +1,25 @@
 <div class="row">
     <div class="col-xs-2">
-        <div class="overflow">
-            <div class="list-group">
-                <a href="javascript:;" ng-repeat="report in mr.reports" 
-                    class="list-group-item" ng-click="mr.select(report)">{{report.name}}</a>
+        <div class="form-horizontal">
+            <div class="col-xs-12">
+                <div class="form-group">
+                    <div class="input-group date" data-provide="datepicker">
+                        <input type="text" name="date" id="date" class="form-control date-picker" ng-model="mr.date" ng-change="mr.dateChange()"
+                        />
+                        <label class="input-group-addon" for="date">
+                                <i class="glyphicon glyphicon glyphicon-calendar"></i>
+                            </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="overflow">
+                    <div class="list-group">
+                        <a href="javascript:;" ng-repeat="report in mr.reports" class="list-group-item" ng-click="mr.select(report)">{{report.name}}</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -93,8 +93,8 @@ class MyTitles {
         return this.myTitles.some(t=>this.project && t.projectId===this.project.id && t.typeId == type.id);
     }
 
-    dateChange(){
-        if (this.date!="" && this.date != this.$routeParams["date"])
-            this.$location.path("/app/my-titles/"+this.date);
+    dateChange() {
+        if (this.date != "" && this.date != this.$routeParams["date"])
+            this.$location.path("/app/my-titles/" + this.date);
     }
 }

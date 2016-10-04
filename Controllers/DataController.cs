@@ -134,10 +134,10 @@ namespace ReportGenerator.Controllers
             System.IO.File.WriteAllLines(path, titles.Select(title => $"{title.Name}\t{title.ProjectId}\t{title.TypeId}"));
         }
 
-        [HttpGet("reports")]
-        public IEnumerable<ReportFile> GetReportFiles()
+        [HttpGet("reports/{date:DateTime}")]
+        public IEnumerable<ReportFile> GetReportFiles([FromRoute]DateTime date)
         {
-            return GetFiles().Select(file => new ReportFile
+            return GetFiles(date).Select(file => new ReportFile
             {
                 Name = Path.GetFileName(file),
                 Date = System.IO.File.GetCreationTime(file)

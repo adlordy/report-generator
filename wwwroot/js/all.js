@@ -31,8 +31,8 @@ var DataService = (function () {
     DataService.prototype.setMyTitles = function (titles) {
         return this.$http.put("api/data/my-titles", titles).then(function (r) { return r.data; });
     };
-    DataService.prototype.getReports = function () {
-        return this.$http.get("api/data/reports").then(function (r) { return r.data; });
+    DataService.prototype.getReports = function (date) {
+        return this.$http.get("api/data/reports/" + date).then(function (r) { return r.data; });
     };
     DataService.prototype.getReport = function (file) {
         return this.$http.get("api/data/report/" + file).then(function (r) { return r.data; });
@@ -225,8 +225,11 @@ var MyProjects = (function () {
     return MyProjects;
 }());
 var MyReports = (function () {
-    function MyReports(dataService) {
+    function MyReports(dataService, $routeParams, $location) {
         this.dataService = dataService;
+        this.$routeParams = $routeParams;
+        this.$location = $location;
+        this.date = this.$routeParams["date"];
     }
     MyReports.prototype.select = function (report) {
         var _this = this;
@@ -235,6 +238,10 @@ var MyReports = (function () {
             _this.reportItems = items.filter(function (r) { return r.project.id !== -1; });
             _this.personal = items.filter(function (r) { return r.project.id === -1; })[0];
         });
+    };
+    MyReports.prototype.dateChange = function () {
+        if (this.date != "" && this.date != this.$routeParams["date"])
+            this.$location.path("/app/my-reports/" + this.date);
     };
     MyReports.definition = {
         templateUrl: "components/my-reports.html",
@@ -284,6 +291,10 @@ angular.module("app", ["ngRoute"])
     .component("sync", Sync.definition)
     .directive("datePicker", datePickerDirective)
     .config(function ($locationProvider, $routeProvider) {
+    var yesterday = function () {
+        var date = new Date(Date.now() - 24 * 3600 * 1000);
+        return date.toISOString().substring(0, 10);
+    };
     $locationProvider.html5Mode(true);
     $routeProvider.when("/app/my-projects", {
         template: "<my-projects customers='$resolve.data.customers' my-projects='$resolve.data.myProjects' />",
@@ -294,8 +305,7 @@ angular.module("app", ["ngRoute"])
         }
     }).when("/app/my-titles/", {
         redirectTo: function () {
-            var date = new Date(Date.now() - 24 * 3600 * 1000);
-            return "/app/my-titles/" + date.toISOString().substring(0, 10);
+            return "/app/my-titles/" + yesterday();
         }
     }).when("/app/my-titles/:date", {
         template: "<my-titles titles='$resolve.titles' my-titles='$resolve.myTitles' my-projects='$resolve.data.myProjects' types='$resolve.types' />",
@@ -313,11 +323,16 @@ angular.module("app", ["ngRoute"])
                 return dataService.getTypes();
             }
         }
-    }).when("/app/my-reports", {
+    })
+        .when("/app/my-reports", {
+        redirectTo: function () {
+            return "/app/my-reports/" + yesterday();
+        }
+    }).when("/app/my-reports/:date", {
         template: "<my-reports reports='$resolve.reports' />",
         resolve: {
-            reports: function (dataService) {
-                return dataService.getReports();
+            reports: function (dataService, $route) {
+                return dataService.getReports($route.current.params["date"]);
             }
         }
     })

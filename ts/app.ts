@@ -16,6 +16,11 @@ angular.module("app",["ngRoute"])
     .component("sync",Sync.definition)
     .directive("datePicker",datePickerDirective)
     .config(($locationProvider:ng.ILocationProvider,$routeProvider:ng.route.IRouteProvider)=>{
+        let yesterday = ()=>{ 
+            let date = new Date(Date.now() - 24*3600*1000);
+            return date.toISOString().substring(0,10);
+        };
+
         $locationProvider.html5Mode(true);
 
         $routeProvider.when("/app/my-projects",{
@@ -27,8 +32,8 @@ angular.module("app",["ngRoute"])
             }
         }).when("/app/my-titles/",{
             redirectTo: ()=>{
-                let date = new Date(Date.now() - 24*3600*1000);
-                return "/app/my-titles/" + date.toISOString().substring(0,10);
+                
+                return "/app/my-titles/" + yesterday();
             }
         }).when("/app/my-titles/:date",{
             template: "<my-titles titles='$resolve.titles' my-titles='$resolve.myTitles' my-projects='$resolve.data.myProjects' types='$resolve.types' />",
@@ -46,11 +51,16 @@ angular.module("app",["ngRoute"])
                     return dataService.getTypes();
                 }
             }
-        }).when("/app/my-reports",{
+        })
+        .when("/app/my-reports",{
+            redirectTo: ()=>{
+                return "/app/my-reports/" + yesterday();
+            }
+        }).when("/app/my-reports/:date",{
             template: "<my-reports reports='$resolve.reports' />",
             resolve:{
-                reports:(dataService:DataService)=>{
-                    return dataService.getReports();
+                reports:(dataService:DataService, $route:ng.route.IRouteService)=>{
+                    return dataService.getReports($route.current.params["date"]);
                 }
             }
         })

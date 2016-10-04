@@ -41,8 +41,8 @@ class DataService {
         return this.$http.put("api/data/my-titles", titles).then(r => r.data);
     }
 
-    getReports() {
-        return this.$http.get<ReportFile[]>("api/data/reports").then(r => r.data);
+    getReports(date:string) {
+        return this.$http.get<ReportFile[]>("api/data/reports/"+date).then(r => r.data);
     }
 
     getReport(file: string) {
