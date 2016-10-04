@@ -35,7 +35,7 @@ namespace ReportGenerator.Controllers
                 Id = (int)properties.Element(d + "Идентификатор"),
                 ShortName = properties.Element(d + "КраткоеНаименованиеЗаказчика").Value,
                 Name = properties.Element(d + "ПолноеНаименованиеЗаказчика").Value
-            }).Concat(new []{_service.Self});
+            }).Concat(new[] { _service.Self });
         }
 
         [HttpGet("projects")]
@@ -46,7 +46,7 @@ namespace ReportGenerator.Controllers
                 Id = (int)properties.Element(d + "Идентификатор"),
                 Name = properties.Element(d + "НаименованиеПроекта").Value,
                 CustomerId = (int)properties.Element(d + "КраткоеНаименованиеЗаказчикаId")
-            }).Concat(new []{_service.Personal});
+            }).Concat(new[] { _service.Personal });
         }
 
         [HttpGet("types")]
@@ -88,15 +88,15 @@ namespace ReportGenerator.Controllers
         }
 
         [HttpGet("titles/{date:DateTime}")]
-        public IEnumerable<string> GetTitles([FromRoute] DateTime date)
+        public IEnumerable<Title> GetTitles([FromRoute] DateTime date)
         {
-            return GetFiles(date).SelectMany(file => System.IO.File.ReadAllLines(file).Skip(1))
-                .Select(line => line.Split('\t')[0]).Distinct().OrderBy(t => t);
+            return GetFiles(date).SelectMany(GetTitles)
+                .Distinct().OrderBy(t => t.Name);
         }
 
         private string[] GetFiles(DateTime? date = null)
         {
-            return Directory.GetFiles(GetMonitorPath(), (date!=null?date.Value.ToString("yyyy-MM-dd"):"") + "*.csv");
+            return Directory.GetFiles(GetMonitorPath(), (date != null ? date.Value.ToString("yyyy-MM-dd") : "") + "*.csv");
         }
 
         private static string GetMonitorPath()
@@ -105,7 +105,7 @@ namespace ReportGenerator.Controllers
         }
 
         [HttpGet("my-titles")]
-        public IEnumerable<Title> GetMyTitles()
+        public IEnumerable<MyTitle> GetMyTitles()
         {
             var path = Path.Combine(this._hostingEnvironment.ContentRootPath, "data", "my-titles.txt");
             if (System.IO.File.Exists(path))
@@ -113,7 +113,7 @@ namespace ReportGenerator.Controllers
                 return System.IO.File.ReadAllLines(path).Select(line =>
                 {
                     var parts = line.Split('\t');
-                    return new Title
+                    return new MyTitle
                     {
                         Name = parts[0],
                         ProjectId = Int32.Parse(parts[1]),
@@ -123,12 +123,12 @@ namespace ReportGenerator.Controllers
             }
             else
             {
-                return Enumerable.Empty<Title>();
+                return Enumerable.Empty<MyTitle>();
             }
         }
 
         [HttpPut("my-titles")]
-        public void SetMyTitles([FromBody] Title[] titles)
+        public void SetMyTitles([FromBody] MyTitle[] titles)
         {
             var path = Path.Combine(this._hostingEnvironment.ContentRootPath, "data", "my-titles.txt");
             System.IO.File.WriteAllLines(path, titles.Select(title => $"{title.Name}\t{title.ProjectId}\t{title.TypeId}"));
@@ -151,38 +151,32 @@ namespace ReportGenerator.Controllers
             if (System.IO.File.Exists(path))
             {
                 var date = System.IO.File.GetCreationTime(path);
-                var items = System.IO.File.ReadAllLines(path).Select(line =>
-                {
-                    return line.Split('\t');
-                }).Skip(1).Where(parts => parts.Length == 2).Select(parts =>
-                {
-                    return new { Name = parts[0], Count = Int32.Parse(parts[1]) };
-                });
+                var items = GetTitles(path);
                 var customers = GetCustomers();
                 var projects = GetProjects();
                 var myTitles = GetMyTitles();
-                var types = GetTypes().Concat(new []{_service.NoWorkType});
+                var types = GetTypes().Concat(new[] { _service.NoWorkType });
                 var titles = from i in items
                              join t in myTitles on i.Name equals t.Name
-                             group i.Count by new {t.ProjectId,t.TypeId} into g
+                             group i.Count by new { t.ProjectId, t.TypeId } into g
                              select new
                              {
                                  Key = g.Key,
                                  Count = g.Sum()
                              };
                 var results = from t in titles
-                       join p in projects on t.Key.ProjectId equals p.Id
-                       join c in customers on p.CustomerId equals c.Id
-                       join w in types on t.Key.TypeId equals w.Id
-                       select new ReportItem
-                       {
-                           Date = date,
-                           Customer = c,
-                           Project = p,
-                           Title = "",
-                           Type = w.Name,
-                           Seconds = t.Count
-                       };
+                              join p in projects on t.Key.ProjectId equals p.Id
+                              join c in customers on p.CustomerId equals c.Id
+                              join w in types on t.Key.TypeId equals w.Id
+                              select new ReportItem
+                              {
+                                  Date = date,
+                                  Customer = c,
+                                  Project = p,
+                                  Title = "",
+                                  Type = w.Name,
+                                  Seconds = t.Count
+                              };
                 return _service.Process(results);
             }
             return Enumerable.Empty<ReportItem>();
@@ -228,5 +222,15 @@ namespace ReportGenerator.Controllers
                     .Element(m + "properties"));
         }
 
+        private IEnumerable<Title> GetTitles(string path)
+        {
+            return System.IO.File.ReadAllLines(path).Select(line =>
+                {
+                    return line.Split('\t');
+                }).Skip(1).Where(parts => parts.Length == 2).Select(parts =>
+                {
+                    return new Title { Name = parts[0], Count = Int32.Parse(parts[1]) };
+                });
+        }
     }
 }

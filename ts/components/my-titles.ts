@@ -12,23 +12,25 @@ class MyTitles {
     };
 
     date:string;
-    titles: Title[];
-    selectedTitles: Title[] = [];
-    myTitles: Title[];
+    titles: (Title&MyTitle)[];
+    selectedTitles: (Title&MyTitle)[] = [];
+    myTitles: (Title&MyTitle)[];
     myProjects: Project[];
     types: WorkType[];
     type: WorkType;
     project: Project;
     saving: boolean;
+    limit:number;
 
     constructor(private dataService: DataService, 
         private $routeParams:ng.route.IRouteParamsService,
         private $location:ng.ILocationService) {
         this.date = this.$routeParams["date"];
+        this.limit = 60;
     }
 
     $onInit() {
-        var map: { [name: string]: Title } = {};
+        var map: { [name: string]: MyTitle } = {};
         this.myTitles.forEach(t => map[t.name] = t);
         this.titles.forEach((t, i) => {
             var my = map[t.name];
@@ -38,7 +40,7 @@ class MyTitles {
         });
     }
 
-    select(title: Title) {
+    select(title: MyTitle) {
         var index = this.selectedTitles.indexOf(title);
         if (index > -1) {
             this.selectedTitles.splice(index, 1);
@@ -51,12 +53,14 @@ class MyTitles {
         this.type = type;
     }
 
-    isSelected(title: Title) {
+    isSelected(title: MyTitle) {
         return this.selectedTitles.indexOf(title) > -1;
     }
 
     getUnassigned() {
-        return this.titles.filter(r => angular.isUndefined(r.projectId));
+        return this.titles
+            .filter(r => angular.isUndefined(r.projectId))
+            .filter(r=>r.count >= this.limit);
     }
 
     assign(project: Project) {
@@ -71,7 +75,7 @@ class MyTitles {
         }
     }
 
-    unassign(title: Title) {
+    unassign(title: MyTitle) {
         var index = this.myTitles.indexOf(title);
         if (index > -1) {
             this.myTitles.splice(index, 1);

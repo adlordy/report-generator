@@ -30,14 +30,14 @@ class DataService {
     }
 
     getTitles(date:string) {
-        return this.$http.get<string[]>("api/data/titles/"+date).then(r => r.data);
+        return this.$http.get<Title[]>("api/data/titles/"+date).then(r => r.data);
     }
 
     getMyTitles() {
-        return this.$http.get<Title[]>("api/data/my-titles").then(r => r.data);
+        return this.$http.get<MyTitle[]>("api/data/my-titles").then(r => r.data);
     }
 
-    setMyTitles(titles: Title[]) {
+    setMyTitles(titles: MyTitle[]) {
         return this.$http.put("api/data/my-titles", titles).then(r => r.data);
     }
 

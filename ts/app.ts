@@ -38,8 +38,8 @@ angular.module("app",["ngRoute"])
         }).when("/app/my-titles/:date",{
             template: "<my-titles titles='$resolve.titles' my-titles='$resolve.myTitles' my-projects='$resolve.data.myProjects' types='$resolve.types' />",
             resolve:{
-                titles : (dataService:DataService,$route:ng.route.IRouteService)=>{
-                    return dataService.getTitles($route.current.params["date"]).then(titles=>titles.map(t=>{return {name:t}}));
+                titles : (dataService:DataService, $route:ng.route.IRouteService)=>{
+                    return dataService.getTitles($route.current.params["date"]);
                 },
                 myTitles : (dataService:DataService)=>{
                     return dataService.getMyTitles();

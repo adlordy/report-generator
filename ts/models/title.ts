@@ -1,5 +1,4 @@
 interface Title{
     name:string;
-    projectId:number;
-    typeId:number;
+    count?:number;
 }

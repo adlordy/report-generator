@@ -13,6 +13,14 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <div class="col-xs-10">
+                            <input type="range" min="0" max="600" ng-model="mt.limit" step="10" />
+                        </div>
+                        <div class="col-xs-2">
+                            <span class="badge">{{mt.limit}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <div class="input-group">
                             <input type="search" class="form-control" ng-model="mt.search" />
                             <label class="input-group-addon">
@@ -30,6 +38,7 @@
                 <div class="list-group">
                     <a href="javascript:;" class="list-group-item" ng-class="{active:mt.isSelected(title)}" ng-repeat="title in mt.getUnassigned() | filter: mt.search | limitTo:100"
                         ng-click="mt.select(title)">
+                        <span class="badge">{{title.count}}</span>
                     {{title.name}}
                 </a>
                 </div>

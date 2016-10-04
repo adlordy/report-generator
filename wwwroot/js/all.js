@@ -119,6 +119,7 @@ var MyTitles = (function () {
         this.$location = $location;
         this.selectedTitles = [];
         this.date = this.$routeParams["date"];
+        this.limit = 60;
     }
     MyTitles.prototype.$onInit = function () {
         var _this = this;
@@ -147,7 +148,10 @@ var MyTitles = (function () {
         return this.selectedTitles.indexOf(title) > -1;
     };
     MyTitles.prototype.getUnassigned = function () {
-        return this.titles.filter(function (r) { return angular.isUndefined(r.projectId); });
+        var _this = this;
+        return this.titles
+            .filter(function (r) { return angular.isUndefined(r.projectId); })
+            .filter(function (r) { return r.count >= _this.limit; });
     };
     MyTitles.prototype.assign = function (project) {
         var _this = this;
@@ -311,7 +315,7 @@ angular.module("app", ["ngRoute"])
         template: "<my-titles titles='$resolve.titles' my-titles='$resolve.myTitles' my-projects='$resolve.data.myProjects' types='$resolve.types' />",
         resolve: {
             titles: function (dataService, $route) {
-                return dataService.getTitles($route.current.params["date"]).then(function (titles) { return titles.map(function (t) { return { name: t }; }); });
+                return dataService.getTitles($route.current.params["date"]);
             },
             myTitles: function (dataService) {
                 return dataService.getMyTitles();
