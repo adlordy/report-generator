@@ -206,7 +206,7 @@ namespace ReportGenerator.Controllers
             var response = await request.GetResponseAsync();
             using (var input = response.GetResponseStream())
             {
-                using (var output = System.IO.File.OpenWrite(path))
+                using (var output = System.IO.File.Create(path))
                 {
                     input.CopyTo(output);
                 }
