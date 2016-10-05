@@ -1,8 +1,25 @@
-<div class="overflow">
-    <div class="list-group">
-        <a href="javascript:;" ng-repeat="project in pl.projects" class="list-group-item"
-            ng-click="pl.select(project)" ng-class="{active:pl.isSelected(project)}">
-            {{project.name}}
-        </a>
+<div class="form-horizontal">
+    <div class="col-sm-12">
+        <div class="form-group">
+            <div class="col-sm-12">
+                <div class="input-group">
+                    <input type="search" class="form-control" ng-model="pl.search" />
+                    <label class="input-group-addon">
+                        <a href="javascript:;" class="btn-link" ng-click="pl.search=''"><i class="glyphicon glyphicon-remove"></i></a>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-12">
+        <div class="overflow">
+            <div class="list-group">
+                <a href="javascript:;" ng-repeat="project in pl.projects | filter:{name:pl.search}" 
+                    class="list-group-item" ng-click="pl.select(project)" 
+                    ng-class="{active:pl.isSelected(project)}">
+                    {{project.name}}
+                </a>
+            </div>
+        </div>
     </div>
 </div>
