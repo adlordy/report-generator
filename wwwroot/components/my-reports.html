@@ -48,7 +48,7 @@
             </thead>
             <tbody>
                 <tr ng-repeat="item in mr.reportItems">
-                    <td>{{item.date | date}}</td>
+                    <td>{{item.date | date:"dd/MM/yyyy"}}</td>
                     <td>{{item.customer.shortName}}</td>
                     <td>{{item.project.name}}</td>
                     <td>{{item.adjustedSeconds/3600 | number:2 }} </td>
@@ -58,7 +58,7 @@
             </tbody>
             <tfoot>
                 <tr class="warning">
-                    <td>{{mr.personal.date | date}}</td>
+                    <td>{{mr.personal.date | date:"dd/MM/yyyy"}}</td>
                     <td>{{mr.personal.customer.shortName}}</td>
                     <td>{{mr.personal.project.name}}</td>
                     <td>{{mr.personal.seconds/3600 | number:2}}</td>
