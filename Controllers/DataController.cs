@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using ReportGenerator.Models;
 using System;
@@ -9,6 +9,9 @@ using System.Xml.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using ReportGenerator.Services;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
 
 namespace ReportGenerator.Controllers
 {
@@ -20,11 +23,13 @@ namespace ReportGenerator.Controllers
         private static readonly XNamespace m = "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata";
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly ReportService _service;
+        private readonly ILogger _logger;
 
-        public DataController(IHostingEnvironment hostingEnvironment, ReportService service)
+        public DataController(IHostingEnvironment hostingEnvironment, ReportService service, ILoggerFactory loggerFactory)
         {
             this._hostingEnvironment = hostingEnvironment;
             this._service = service;
+            this._logger = loggerFactory.CreateLogger("DataController");
         }
 
         [HttpGet("customers")]
@@ -189,6 +194,57 @@ namespace ReportGenerator.Controllers
             await LoadFromServer(baseUrl + "ЗаказчикиПроекты", "projects", 0);
             await LoadFromServer(baseUrl + "ВидыРабот", "types", 0);
             return Ok();
+        }
+
+        [HttpPost("upload")]
+        public async Task<IActionResult> Upload([FromBody] ReportItem[] items)
+        {
+            foreach (var item in items)
+            {
+                var uploadItem = CreateUploadItem(item);
+                _logger.LogInformation("Uploading: \n" + uploadItem.ToString());
+                var result = await UploadItem(uploadItem);
+                _logger.LogInformation("Uploaded. Response: \n" + result.ToString());
+            }
+            return Ok();
+        }
+
+        private async Task<JObject> UploadItem(JObject item)
+        {
+            var baseUrl = "http://ntc-st/ASURV/_vti_bin/listdata.svc/ТабельРабочегоВремени";
+            var json = JsonConvert.SerializeObject(item);
+            var data = System.Text.Encoding.UTF8.GetBytes(json);
+            var request = WebRequest.CreateHttp(baseUrl);
+            request.Method = "POST";
+            request.ContentType = "application/json;charset=utf-8";
+            request.Accept = "application/json";
+            using (var stream = await request.GetRequestStreamAsync())
+            {
+                stream.Write(data, 0, data.Length);
+            }
+            var response = await request.GetResponseAsync();
+            using (var stream = response.GetResponseStream())
+            {
+                using (var reader = new StreamReader(stream))
+                {
+                    var responseString = reader.ReadToEnd();
+                    return JObject.Parse(responseString);
+                }
+            }
+        }
+
+        private JObject CreateUploadItem(ReportItem item)
+        {
+            var result = new JObject();
+            result.Add("Название", item.Type);
+            result.Add("ТипРаботValue", item.Type);
+            result.Add("Заказчик", item.Customer.ShortName);
+            result.Add("Проект", item.Project.Name);
+            result.Add("Время", item.AdjustedSeconds / 3600);
+            result.Add("ОшибкаВЗаказчике", false);
+            result.Add("ОшибкаВПроекте", false);
+            result.Add("ДатаПроведенияРабот", item.Date);
+            return result;
         }
 
         private async Task LoadFromServer(string url, string file, int index)

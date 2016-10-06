@@ -73,7 +73,7 @@ class DataService {
             });
     }
 
-
-
-
+    upload(items:ReportItem[]){
+        return this.$http.post("api/data/upload",items).then((r)=>r.data);
+    }
 }

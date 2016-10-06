@@ -59,6 +59,9 @@ var DataService = (function () {
             return { customers: customers, myProjects: myProjects };
         });
     };
+    DataService.prototype.upload = function (items) {
+        return this.$http.post("api/data/upload", items).then(function (r) { return r.data; });
+    };
     return DataService;
 }());
 /// <reference path="../models/customer.ts" />
@@ -235,6 +238,9 @@ var MyReports = (function () {
         this.$location = $location;
         this.target = 28800;
         this.step = 900;
+        this.uploading = false;
+        this.success = false;
+        this.error = false;
         this.date = this.$routeParams["date"];
     }
     MyReports.prototype.select = function (report) {
@@ -277,6 +283,18 @@ var MyReports = (function () {
             });
         }
         return items;
+    };
+    MyReports.prototype.upload = function () {
+        var _this = this;
+        if (this.reportItems && this.reportItems.length > 0) {
+            this.uploading = true;
+            this.success = false;
+            this.error = false;
+            this.dataService.upload(this.reportItems)
+                .then(function () { return _this.success = true; })
+                .catch(function () { return _this.error = true; })
+                .finally(function () { return _this.uploading = false; });
+        }
     };
     MyReports.definition = {
         templateUrl: "components/my-reports.html",

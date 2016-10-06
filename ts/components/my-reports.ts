@@ -24,6 +24,10 @@ class MyReports {
     target = 28800;
     step = 900;
 
+    uploading = false;
+    success = false;
+    error = false;
+
     select(report: ReportFile) {
         this.report = report;
         this.dataService.getReport(this.report.name).then(items => {
@@ -65,5 +69,17 @@ class MyReports {
             });
         }
         return items;
+    }
+
+    upload(){
+        if (this.reportItems&&this.reportItems.length>0){
+            this.uploading = true;
+            this.success = false;
+            this.error = false;
+            this.dataService.upload(this.reportItems)
+                .then(()=>this.success = true)
+                .catch(()=>this.error = true)
+                .finally(()=>this.uploading = false);
+        }
     }
 }
