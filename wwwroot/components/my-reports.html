@@ -43,6 +43,7 @@
                     <th>Project</th>
                     <th>Time</th>
                     <th>Work Type</th>
+                    <th>Title</th>
                     <th>Actual</th>
                 </tr>
             </thead>
@@ -52,6 +53,7 @@
                     <td>{{item.customer.shortName}}</td>
                     <td>{{item.project.name}}</td>
                     <td>{{item.adjustedSeconds/3600 | number:2 }} </td>
+                    <td>{{item.type}}</td>
                     <td>{{item.type}}</td>
                     <td>{{item.seconds/3600 | number:2}}</td>
                 </tr>
@@ -63,6 +65,7 @@
                     <td>{{mr.personal.project.name}}</td>
                     <td>{{mr.personal.seconds/3600 | number:2}}</td>
                     <td>{{mr.personal.type}}</td>
+                    <td>{{item.type}}</td>
                     <td>{{mr.personal.seconds/3600 | number:2}}</td>
                 </tr>
             </tfoot>
