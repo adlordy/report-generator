@@ -150,7 +150,7 @@ namespace ReportGenerator.Controllers
             var path = Path.Combine(GetMonitorPath(), file);
             if (System.IO.File.Exists(path))
             {
-                var date = System.IO.File.GetCreationTime(path);
+                var date = DateTime.ParseExact(file.Substring(0, 10), "yyyy-MM-dd", null);
                 var items = GetTitles(path);
                 var customers = GetCustomers();
                 var projects = GetProjects();
