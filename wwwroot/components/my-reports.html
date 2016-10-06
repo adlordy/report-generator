@@ -7,8 +7,19 @@
                         <input type="text" name="date" id="date" class="form-control date-picker" ng-model="mr.date" ng-change="mr.dateChange()"
                         />
                         <label class="input-group-addon" for="date">
-                                <i class="glyphicon glyphicon glyphicon-calendar"></i>
-                            </label>
+                            <i class="glyphicon glyphicon glyphicon-calendar"></i>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-xs-9">
+                            <input type="range" name="target" id="target" ng-model="mr.target" 
+                            min="3600" max="28800" step="{{mr.step}}" />
+                        </div>
+                        <div class="col-xs-2">
+                            <span class="badge">{{mr.target / 3600 | number:2}}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -32,6 +43,7 @@
                     <th>Project</th>
                     <th>Time</th>
                     <th>Work Type</th>
+                    <th>Actual</th>
                 </tr>
             </thead>
             <tbody>
@@ -39,8 +51,9 @@
                     <td>{{item.date | date}}</td>
                     <td>{{item.customer.shortName}}</td>
                     <td>{{item.project.name}}</td>
-                    <td>{{item.adjustedSeconds/3600 | number:2 }} ({{item.seconds/3600 | number:2}})</td>
+                    <td>{{item.adjustedSeconds/3600 | number:2 }} </td>
                     <td>{{item.type}}</td>
+                    <td>{{item.seconds/3600 | number:2}}</td>
                 </tr>
             </tbody>
             <tfoot>
@@ -50,6 +63,7 @@
                     <td>{{mr.personal.project.name}}</td>
                     <td>{{mr.personal.seconds/3600 | number:2}}</td>
                     <td>{{mr.personal.type}}</td>
+                    <td>{{mr.personal.seconds/3600 | number:2}}</td>
                 </tr>
             </tfoot>
         </table>

@@ -3,6 +3,7 @@ interface ReportItem{
     customer:Customer;
     project:Project;
     title:string;
-    hours:number;
+    seconds:number;
+    adjustedSeconds:number;
     type:string;
 }

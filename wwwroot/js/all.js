@@ -233,19 +233,50 @@ var MyReports = (function () {
         this.dataService = dataService;
         this.$routeParams = $routeParams;
         this.$location = $location;
+        this.target = 28800;
+        this.step = 900;
         this.date = this.$routeParams["date"];
     }
     MyReports.prototype.select = function (report) {
         var _this = this;
         this.report = report;
         this.dataService.getReport(this.report.name).then(function (items) {
-            _this.reportItems = items.filter(function (r) { return r.project.id !== -1; });
+            _this.reportItems = _this.process(items.filter(function (r) { return r.project.id !== -1; }));
             _this.personal = items.filter(function (r) { return r.project.id === -1; })[0];
         });
     };
     MyReports.prototype.dateChange = function () {
         if (this.date != "" && this.date != this.$routeParams["date"])
             this.$location.path("/app/my-reports/" + this.date);
+    };
+    MyReports.prototype.process = function (items) {
+        var _this = this;
+        if (items.length > 0) {
+            var total = items.reduce(function (s, item) { return item.seconds + s; }, 0);
+            var factor = total / this.target;
+            var values = items.map(function (item) {
+                var value = (item.seconds / factor) / _this.step;
+                return { value: value, decimal: value - Math.floor(value), item: item };
+            });
+            values.sort(function (a, b) { return a.value - b.value; });
+            var targetSum = this.target / this.step;
+            var index = 0;
+            while (values[index].value < 1 && index < values.length) {
+                values[index].value = 1;
+                index++;
+            }
+            var lowSum = values.reduce(function (s, item, i) {
+                return s + Math.floor(item.value);
+            }, 0);
+            var count = targetSum - lowSum;
+            values.sort(function (a, b) { return a.value == 1 ? (b.value == 1 ? 0 : -1) : b.decimal - a.decimal; });
+            values.forEach(function (item, i) {
+                var value = (i < index + count) ?
+                    Math.ceil(item.value) : Math.floor(item.value);
+                item.item.adjustedSeconds = value * _this.step;
+            });
+        }
+        return items;
     };
     MyReports.definition = {
         templateUrl: "components/my-reports.html",

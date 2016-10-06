@@ -173,11 +173,10 @@ namespace ReportGenerator.Controllers
                                   Date = date,
                                   Customer = c,
                                   Project = p,
-                                  Title = "",
                                   Type = w.Name,
                                   Seconds = t.Count
                               };
-                return _service.Process(results);
+                return results;
             }
             return Enumerable.Empty<ReportItem>();
         }
