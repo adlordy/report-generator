@@ -218,6 +218,7 @@ namespace ReportGenerator.Controllers
             request.Method = "POST";
             request.ContentType = "application/json;charset=utf-8";
             request.Accept = "application/json";
+            request.Credentials = CredentialCache.DefaultNetworkCredentials;
             using (var stream = await request.GetRequestStreamAsync())
             {
                 stream.Write(data, 0, data.Length);
