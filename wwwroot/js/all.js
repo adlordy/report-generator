@@ -31,6 +31,15 @@ var DataService = (function () {
     DataService.prototype.setMyTitles = function (titles) {
         return this.$http.put("api/data/my-titles", titles).then(function (r) { return r.data; });
     };
+    DataService.prototype.getMeetings = function (date) {
+        return this.$http.get("api/exchange/meetings/" + date).then(function (r) { return r.data; });
+    };
+    DataService.prototype.getMyMeetings = function () {
+        return this.$http.get("api/data/my-meetings").then(function (r) { return r.data; });
+    };
+    DataService.prototype.setMyMeetings = function (items) {
+        return this.$http.put("api/data/my-meetings", items).then(function (r) { return r.data; });
+    };
     DataService.prototype.getReports = function (date) {
         return this.$http.get("api/data/reports/" + date).then(function (r) { return r.data; });
     };
@@ -205,6 +214,91 @@ var MyTitles = (function () {
     };
     return MyTitles;
 }());
+var MyMeetings = (function () {
+    function MyMeetings(dataService, $location, $routeParams) {
+        this.dataService = dataService;
+        this.$location = $location;
+        this.$routeParams = $routeParams;
+        this.selectedMeetings = [];
+        this.date = this.$routeParams["date"];
+    }
+    MyMeetings.prototype.duration = function (meeting) {
+        return ((new Date(meeting.end).getTime() - new Date(meeting.start).getTime()) / 3600000).toFixed(2);
+    };
+    MyMeetings.prototype.$onInit = function () {
+        var _this = this;
+        var map = {};
+        this.myMeetings.forEach(function (m) { return map[m.subject] = m; });
+        this.meetings.forEach(function (m, i) {
+            var my = map[m.subject];
+            if (my) {
+                _this.meetings[i] = angular.extend(my, m);
+            }
+        });
+    };
+    MyMeetings.prototype.select = function (meeting) {
+        var index = this.selectedMeetings.indexOf(meeting);
+        if (index > -1) {
+            this.selectedMeetings.splice(index, 1);
+        }
+        else {
+            this.selectedMeetings.push(meeting);
+        }
+    };
+    MyMeetings.prototype.selectType = function (type) {
+        this.type = type;
+    };
+    MyMeetings.prototype.isSelected = function (title) {
+        return this.selectedMeetings.indexOf(title) > -1;
+    };
+    MyMeetings.prototype.getUnassigned = function () {
+        return this.meetings
+            .filter(function (r) { return angular.isUndefined(r.projectId); });
+    };
+    MyMeetings.prototype.assign = function (project) {
+        var _this = this;
+        this.project = project;
+        if (this.project && (this.type || this.isPersonal(this.project))) {
+            this.selectedMeetings.forEach(function (m) {
+                m.projectId = project.id;
+                m.typeId = _this.isPersonal(project) ? -1 : _this.type.id;
+            });
+            this.myMeetings = this.myMeetings.concat(this.selectedMeetings);
+            this.selectedMeetings = [];
+        }
+    };
+    MyMeetings.prototype.unassign = function (meeting) {
+        var index = this.myMeetings.indexOf(meeting);
+        if (index > -1) {
+            this.myMeetings.splice(index, 1);
+        }
+        meeting.projectId = undefined;
+    };
+    MyMeetings.prototype.dateChange = function () {
+        if (this.date != "" && this.date != this.$routeParams["date"])
+            this.$location.path("/app/my-meetings/" + this.date);
+    };
+    MyMeetings.prototype.saveMyMeetings = function () {
+        var _this = this;
+        this.saving = true;
+        this.dataService.setMyMeetings(this.myMeetings).finally(function () { return _this.saving = false; });
+    };
+    MyMeetings.prototype.isPersonal = function (project) {
+        return project.id === -1;
+    };
+    MyMeetings.definition = {
+        templateUrl: "components/my-meetings.html",
+        controller: MyMeetings,
+        controllerAs: "mm",
+        bindings: {
+            meetings: "=",
+            myMeetings: "=",
+            myProjects: "=",
+            types: "="
+        }
+    };
+    return MyMeetings;
+}());
 var MyProjects = (function () {
     function MyProjects(dataService) {
         this.dataService = dataService;
@@ -330,6 +424,7 @@ var Sync = (function () {
 /// <reference path="components/customer-list.ts"  />
 /// <reference path="components/project-list.ts"  />
 /// <reference path="components/my-titles.ts"  />
+/// <reference path="components/my-meetings.ts"  />
 /// <reference path="components/my-projects.ts"  />
 /// <reference path="components/my-reports.ts"  />
 /// <reference path="components/sync.ts"  />
@@ -340,6 +435,7 @@ angular.module("app", ["ngRoute"])
     .component("projectList", ProjectList.definition)
     .component("myProjects", MyProjects.definition)
     .component("myTitles", MyTitles.definition)
+    .component("myMeetings", MyMeetings.definition)
     .component("myReports", MyReports.definition)
     .component("sync", Sync.definition)
     .directive("datePicker", datePickerDirective)
@@ -368,6 +464,28 @@ angular.module("app", ["ngRoute"])
             },
             myTitles: function (dataService) {
                 return dataService.getMyTitles();
+            },
+            data: function (dataService) {
+                return dataService.getData();
+            },
+            types: function (dataService) {
+                return dataService.getTypes();
+            }
+        }
+    })
+        .when("/app/my-meetings/", {
+        redirectTo: function () {
+            return "/app/my-meetings/" + yesterday();
+        }
+    })
+        .when("/app/my-meetings/:date", {
+        template: "<my-meetings meetings='$resolve.meetings' my-meetings='$resolve.myMeetings' my-projects='$resolve.data.myProjects' types='$resolve.types' />",
+        resolve: {
+            meetings: function (dataService, $route) {
+                return dataService.getMeetings($route.current.params["date"]);
+            },
+            myMeetings: function (dataService) {
+                return dataService.getMyMeetings();
             },
             data: function (dataService) {
                 return dataService.getData();

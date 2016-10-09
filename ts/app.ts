@@ -1,6 +1,7 @@
 /// <reference path="components/customer-list.ts"  />
 /// <reference path="components/project-list.ts"  />
 /// <reference path="components/my-titles.ts"  />
+/// <reference path="components/my-meetings.ts"  />
 /// <reference path="components/my-projects.ts"  />
 /// <reference path="components/my-reports.ts"  />
 /// <reference path="components/sync.ts"  />
@@ -12,6 +13,7 @@ angular.module("app",["ngRoute"])
     .component("projectList",ProjectList.definition)
     .component("myProjects",MyProjects.definition)
     .component("myTitles",MyTitles.definition)
+    .component("myMeetings",MyMeetings.definition)
     .component("myReports",MyReports.definition)
     .component("sync",Sync.definition)
     .directive("datePicker",datePickerDirective)
@@ -43,6 +45,28 @@ angular.module("app",["ngRoute"])
                 },
                 myTitles : (dataService:DataService)=>{
                     return dataService.getMyTitles();
+                },
+                data : (dataService:DataService)=>{
+                    return dataService.getData();
+                },
+                types:(dataService:DataService)=>{
+                    return dataService.getTypes();
+                }
+            }
+        })
+        .when("/app/my-meetings/",{
+            redirectTo: ()=>{
+                return "/app/my-meetings/" + yesterday();
+            }
+        })
+        .when("/app/my-meetings/:date",{
+            template: "<my-meetings meetings='$resolve.meetings' my-meetings='$resolve.myMeetings' my-projects='$resolve.data.myProjects' types='$resolve.types' />",
+            resolve:{
+                meetings : (dataService:DataService, $route:ng.route.IRouteService)=>{
+                    return dataService.getMeetings($route.current.params["date"]);
+                },
+                myMeetings : (dataService:DataService)=>{
+                    return dataService.getMyMeetings();
                 },
                 data : (dataService:DataService)=>{
                     return dataService.getData();

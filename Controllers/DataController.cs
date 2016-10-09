@@ -23,13 +23,16 @@ namespace ReportGenerator.Controllers
         private static readonly XNamespace m = "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata";
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly ReportService _service;
+
+        private readonly ExchangeService _exchangeService;
         private readonly ILogger _logger;
 
-        public DataController(IHostingEnvironment hostingEnvironment, ReportService service, ILoggerFactory loggerFactory)
+        public DataController(IHostingEnvironment hostingEnvironment, ReportService service, ExchangeService exchangeService, ILoggerFactory loggerFactory)
         {
-            this._hostingEnvironment = hostingEnvironment;
-            this._service = service;
-            this._logger = loggerFactory.CreateLogger("DataController");
+            _hostingEnvironment = hostingEnvironment;
+            _service = service;
+            _exchangeService = exchangeService;
+            _logger = loggerFactory.CreateLogger("DataController");
         }
 
         [HttpGet("customers")]
@@ -139,6 +142,36 @@ namespace ReportGenerator.Controllers
             System.IO.File.WriteAllLines(path, titles.Select(title => $"{title.Name}\t{title.ProjectId}\t{title.TypeId}"));
         }
 
+        [HttpGet("my-meetings")]
+        public IEnumerable<MyMeeting> GetMyMeetings()
+        {
+            var path = Path.Combine(this._hostingEnvironment.ContentRootPath, "data", "my-meetings.txt");
+            if (System.IO.File.Exists(path))
+            {
+                return System.IO.File.ReadAllLines(path).Select(line =>
+                {
+                    var parts = line.Split('\t');
+                    return new MyMeeting
+                    {
+                        Subject = parts[0],
+                        ProjectId = Int32.Parse(parts[1]),
+                        TypeId = Int32.Parse(parts[2])
+                    };
+                });
+            }
+            else
+            {
+                return Enumerable.Empty<MyMeeting>();
+            }
+        }
+
+        [HttpPut("my-meetings")]
+        public void SetMyMeetings([FromBody] MyMeeting[] meetings)
+        {
+            var path = Path.Combine(this._hostingEnvironment.ContentRootPath, "data", "my-meetings.txt");
+            System.IO.File.WriteAllLines(path, meetings.Select(meeting => $"{meeting.Subject}\t{meeting.ProjectId}\t{meeting.TypeId}"));
+        }
+
         [HttpGet("reports/{date:DateTime}")]
         public IEnumerable<ReportFile> GetReportFiles([FromRoute]DateTime date)
         {
@@ -156,30 +189,40 @@ namespace ReportGenerator.Controllers
             if (System.IO.File.Exists(path))
             {
                 var date = DateTime.ParseExact(file.Substring(0, 10), "yyyy-MM-dd", null);
-                var items = GetTitles(path);
+                var titles = GetTitles(path);
                 var customers = GetCustomers();
                 var projects = GetProjects();
                 var myTitles = GetMyTitles();
+                var myMeetings = GetMyMeetings();
+                var meetings = _exchangeService.GetMeetings(date);
                 var types = GetTypes().Concat(new[] { _service.NoWorkType });
-                var titles = from i in items
-                             join t in myTitles on i.Name equals t.Name
-                             group i.Count by new { t.ProjectId, t.TypeId } into g
-                             select new
-                             {
-                                 Key = g.Key,
-                                 Count = g.Sum()
-                             };
-                var results = from t in titles
-                              join p in projects on t.Key.ProjectId equals p.Id
+                
+                var reportedTitles = from t in titles
+                    join mt in myTitles on t.Name equals mt.Name
+                    select new Reportable(t.Count,mt.ProjectId,mt.TypeId);
+                    
+                var reportedMeetings = from m in meetings
+                    join mm in myMeetings on m.Subject equals mm.Subject
+                    select new Reportable(m.Duration,mm.ProjectId, mm.TypeId);
+                
+                var items = from i in (reportedTitles.Concat(reportedMeetings))
+                    group i.Count by new Tuple<int,int>(i.ProjectId, i.TypeId) into g
+                    select new
+                    {
+                        Key = g.Key,
+                        Count = g.Sum()
+                    };
+                var results = from i in items
+                              join p in projects on i.Key.Item1 equals p.Id
                               join c in customers on p.CustomerId equals c.Id
-                              join w in types on t.Key.TypeId equals w.Id
+                              join w in types on i.Key.Item2 equals w.Id
                               select new ReportItem
                               {
                                   Date = date,
                                   Customer = c,
                                   Project = p,
                                   Type = w.Name,
-                                  Seconds = t.Count
+                                  Seconds = i.Count
                               };
                 return results;
             }

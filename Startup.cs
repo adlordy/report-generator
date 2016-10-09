@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReportGenerator.Services;
+using ReportGenerator.Models;
 
 namespace ReportGenerator
 {
@@ -29,6 +30,9 @@ namespace ReportGenerator
         {
             // Add framework services.
             services.AddMvc();
+            services.AddOptions();
+            services.Configure<ExchangeOptions>(Configuration.GetSection("ExchangeOptions"));
+            services.AddScoped<ExchangeService>();
             services.AddSingleton(new ReportService());
         }
 

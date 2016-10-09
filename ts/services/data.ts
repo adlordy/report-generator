@@ -41,6 +41,18 @@ class DataService {
         return this.$http.put("api/data/my-titles", titles).then(r => r.data);
     }
 
+    getMeetings(date:string){
+        return this.$http.get<Meeting[]>("api/exchange/meetings/"+date).then(r=>r.data);
+    }
+
+    getMyMeetings(){
+        return this.$http.get<Meeting[]>("api/data/my-meetings").then(r=>r.data);
+    }
+
+    setMyMeetings(items:Meeting[]){
+        return this.$http.put("api/data/my-meetings",items).then(r=>r.data);
+    }
+
     getReports(date:string) {
         return this.$http.get<ReportFile[]>("api/data/reports/"+date).then(r => r.data);
     }
@@ -76,4 +88,6 @@ class DataService {
     upload(items:ReportItem[]){
         return this.$http.post("api/data/upload",items).then((r)=>r.data);
     }
+
+    
 }

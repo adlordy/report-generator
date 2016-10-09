@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}\\bin\\Debug\\netcoreapp1.0\\Report-Generator.dll",
+            "program": "${workspaceRoot}\\bin\\Debug\\net452\\win7-x64\\Report-Generator.exe",
             "args": [],
             "cwd": "${workspaceRoot}",
             "stopAtEntry": false,
